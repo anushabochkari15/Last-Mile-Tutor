@@ -9,17 +9,21 @@ import com.example.maths.web.dto.AnswerResult;
 import com.example.maths.web.dto.LearnerRequest;
 import com.example.maths.web.dto.MasteryView;
 import com.example.maths.web.dto.ProgressView;
+import com.example.maths.web.dto.QuestionView;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/learners")
@@ -38,9 +42,15 @@ public class LearnerController {
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Learner create(@Valid @RequestBody LearnerRequest req) {
-        return learnerRepository.save(new Learner(req.name(), req.email()));
+    public ResponseEntity<Learner> create(@Valid @RequestBody LearnerRequest req) {
+        String email = req.email().trim().toLowerCase(Locale.ROOT);
+        String name = req.name().trim();
+        Optional<Learner> existing = learnerRepository.findByEmail(email);
+        if (existing.isPresent()) {
+            return ResponseEntity.ok(existing.get());
+        }
+        Learner saved = learnerRepository.save(new Learner(name, email));
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @GetMapping
@@ -63,5 +73,10 @@ public class LearnerController {
     @GetMapping("/{id}/progress")
     public ProgressView progress(@PathVariable Long id) {
         return learningService.progress(id);
+    }
+
+    @GetMapping("/{id}/practice")
+    public List<QuestionView> practice(@PathVariable Long id, @RequestParam String topic) {
+        return learningService.practiceQuestions(id, topic);
     }
 }

@@ -52,8 +52,17 @@ export default function Dashboard({ learnerId, onStartDiagnostic, onLearn, onPra
         </div>
         <p>
           <strong>Weakest topic:</strong>{' '}
-          {progress.weakestTopic || 'Answer a few questions to find out'}
+          {progress.weakestTopic || null}
         </p>
+        {progress.weakestTopic ? (
+          <button className="btn-primary" onClick={() => onPractise(progress.weakestTopic)}>
+            Revise weakest topic
+          </button>
+        ) : (
+          <p className="lesson-para">
+            No weak topic yet. Answer a few questions and we will suggest one.
+          </p>
+        )}
         <button className="btn-primary" onClick={onStartDiagnostic}>
           Start diagnostic quiz
         </button>

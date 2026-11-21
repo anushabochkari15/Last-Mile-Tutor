@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { postJson, errorText } from './api.js';
+import { postJson, getJson, errorText, DEMO_LEARNER, seedDemoProgress } from './api.js';
 import Dashboard from './components/Dashboard.jsx';
 import Lesson from './components/Lesson.jsx';
 import { QuizLoader } from './components/Quiz.jsx';
@@ -26,6 +26,48 @@ export default function App() {
   const [email, setEmail] = useState('');
   const [setupError, setSetupError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
+
+  async function handleDemoLearner() {
+    setSetupError('');
+    setDemoLoading(true);
+    try {
+      let data;
+      try {
+        data = await postJson('/api/learners', DEMO_LEARNER);
+      } catch {
+        setSetupError('Could not start the demo. Check that the backend is running on port 8080.');
+        return;
+      }
+      if (!data || data.id == null) {
+        setSetupError('Could not start the demo. Check that the backend is running on port 8080.');
+        return;
+      }
+
+      // Seed progress only if the demo learner has no answers yet.
+      let progress = null;
+      try {
+        progress = await getJson(`/api/learners/${encodeURIComponent(data.id)}/progress`);
+      } catch {
+        progress = null;
+      }
+      if (!progress || !progress.overallAttempts) {
+        try {
+          await seedDemoProgress(data.id);
+        } catch {
+          // Ignore seeding errors; the demo still works with less progress.
+        }
+      }
+
+      localStorage.setItem(LEARNER_KEY, JSON.stringify(data));
+      setLearner(data);
+      setName('');
+      setEmail('');
+      setView('dashboard');
+    } finally {
+      setDemoLoading(false);
+    }
+  }
 
   async function createLearner(e) {
     e.preventDefault();
@@ -105,6 +147,14 @@ export default function App() {
             <button type="submit" className="btn-primary" disabled={saving}>
               {saving ? 'Saving…' : 'Start learning'}
             </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={handleDemoLearner}
+              disabled={demoLoading}
+            >
+              {demoLoading ? 'Starting demo...' : 'Use demo learner'}
+            </button>
           </form>
         </section>
       )}
@@ -140,8 +190,9 @@ export default function App() {
           <h2>Practise: {topic}</h2>
           <QuizLoader
             key={topic}
-            path={`/api/questions?topic=${encodeURIComponent(topic)}`}
+            path={`/api/quiz/practice?learnerId=${learner.id}&topic=${encodeURIComponent(topic)}`}
             learnerId={learner.id}
+            practice
           />
         </section>
       )}

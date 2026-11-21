@@ -1,0 +1,19 @@
+What is it?
+Geometry studies shapes, lengths, areas and angles. It lets us measure flat shapes and find unknown sides or angles using a few reliable rules.
+Key rules
+- Rectangle area equals length x width.
+- Angles in any triangle add up to 180 degrees.
+- In a right-angled triangle, a^2 + b^2 = c^2, where c is the hypotenuse.
+Worked examples
+Example 1: Find the area of a rectangle 6 cm by 4 cm
+1. Write the formula: area = length x width
+2. Substitute the values: 6 x 4
+3. Multiply and add units: 24 cm^2
+Answer: 24 cm^2
+Example 2: A right triangle has sides 3 and 4. Find the hypotenuse.
+1. Square the known sides: 3^2 = 9 and 4^2 = 16
+2. Add them: 9 + 16 = 25
+3. Take the square root: c = 5
+Answer: hypotenuse = 5
+Common mistake
+Using the hypotenuse as one of the shorter sides, or mixing up units such as cm and m. The hypotenuse is always the longest side, opposite the right angle.

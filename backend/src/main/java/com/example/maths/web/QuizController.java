@@ -4,6 +4,7 @@ import com.example.maths.service.LearningService;
 import com.example.maths.web.dto.QuestionView;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -21,5 +22,10 @@ public class QuizController {
     @GetMapping("/diagnostic")
     public List<QuestionView> diagnostic() {
         return learningService.diagnosticQuiz();
+    }
+
+    @GetMapping("/practice")
+    public List<QuestionView> practice(@RequestParam Long learnerId, @RequestParam String topic) {
+        return learningService.nextPracticeSet(learnerId, topic);
     }
 }

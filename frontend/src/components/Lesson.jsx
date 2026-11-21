@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { getJson, errorText } from '../api.js';
 
 const LANGS = [
@@ -6,6 +6,141 @@ const LANGS = [
   { code: 'te', label: 'Telugu' },
   { code: 'hi', label: 'Hindi' },
 ];
+
+const HEADINGS = {
+  en: ['What is it?', 'Key rules', 'Worked examples', 'Common mistake'],
+  te: ['ఇది ఏమిటి?', 'ముఖ్య నియమాలు', 'ఉదాహరణలు', 'సాధారణ తప్పు'],
+  hi: ['यह क्या है?', 'मुख्य नियम', 'उदाहरण', 'आम गलती'],
+};
+const ALL_HEADINGS = [...HEADINGS.en, ...HEADINGS.te, ...HEADINGS.hi];
+const WORKED_HEADINGS = [HEADINGS.en[2], HEADINGS.te[2], HEADINGS.hi[2]];
+const EXAMPLE_RE = /^(Example|ఉదాహరణ|उदाहरण) \d+:/;
+const ANSWER_RE = /^(Answer|సమాధానం|उत्तर):\s*(.*)$/;
+
+// Splits plain lesson text into sections at known headings.
+// Text before the first heading goes into a section with heading null.
+function parseLesson(text) {
+  const sections = [];
+  let current = { heading: null, lines: [] };
+  let hasHeadings = false;
+  for (const raw of String(text ?? '').split(/\r?\n/)) {
+    const line = raw.trim();
+    if (ALL_HEADINGS.includes(line)) {
+      hasHeadings = true;
+      if (hasContent(current)) sections.push(current);
+      current = { heading: line, lines: [] };
+    } else {
+      current.lines.push(line);
+    }
+  }
+  if (hasContent(current)) sections.push(current);
+  return { sections, hasHeadings };
+}
+
+function hasContent(section) {
+  return section.heading !== null || section.lines.some((l) => l !== '');
+}
+
+function renderSection(section, sIdx) {
+  const isWorked = WORKED_HEADINGS.includes(section.heading);
+  const out = [];
+  let para = [];
+  let list = [];
+  let example = null;
+
+  const key = () => `${sIdx}-${out.length}`;
+  const flushPara = () => {
+    if (para.length) {
+      out.push(
+        <p key={key()} className="lesson-para">
+          {para.join(' ')}
+        </p>
+      );
+      para = [];
+    }
+  };
+  const flushList = () => {
+    if (list.length) {
+      out.push(
+        <ul key={key()} className="lesson-list">
+          {list.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
+        </ul>
+      );
+      list = [];
+    }
+  };
+  const flushExample = () => {
+    if (example) {
+      out.push(
+        <div key={key()} className="example-box">
+          <h4 className="example-title">{example.title}</h4>
+          {example.steps.length > 0 && (
+            <ol className="lesson-steps">
+              {example.steps.map((s, i) => (
+                <li key={i}>{s}</li>
+              ))}
+            </ol>
+          )}
+          {example.answer && (
+            <p className="example-answer">
+              <strong>{example.answerLabel}</strong> {example.answer}
+            </p>
+          )}
+        </div>
+      );
+      example = null;
+    }
+  };
+
+  for (const line of section.lines) {
+    if (line === '') {
+      flushPara();
+      flushList();
+      continue;
+    }
+    if (isWorked && EXAMPLE_RE.test(line)) {
+      flushPara();
+      flushList();
+      flushExample();
+      example = { title: line, steps: [], answer: '', answerLabel: '' };
+      continue;
+    }
+    if (isWorked && example) {
+      const step = line.match(/^\d+\.\s+(.*)$/);
+      if (step) {
+        example.steps.push(step[1]);
+        continue;
+      }
+      const answer = line.match(ANSWER_RE);
+      if (answer) {
+        example.answerLabel = answer[1] + ':';
+        example.answer = answer[2];
+        continue;
+      }
+    }
+    if (line.startsWith('- ')) {
+      flushPara();
+      flushExample();
+      list.push(line.slice(2));
+    } else {
+      flushList();
+      flushExample();
+      para.push(line);
+    }
+  }
+  flushPara();
+  flushList();
+  flushExample();
+
+  return (
+    <Fragment key={`s-${sIdx}`}>
+      {section.heading !== null && <h3 className="lesson-heading">{section.heading}</h3>}
+      {out}
+    </Fragment>
+  );
+}
 
 export default function Lesson({ topic, learnerId }) {
   const [lang, setLang] = useState('en');
@@ -51,6 +186,14 @@ export default function Lesson({ topic, learnerId }) {
 
   const lessonLang = lesson ? lesson.lang || lang : lang;
 
+  const parsed = lesson ? parseLesson(lesson.text) : null;
+  const plainBlocks = lesson
+    ? String(lesson.text ?? '')
+        .split(/\n\s*\n/)
+        .map((b) => b.trim())
+        .filter(Boolean)
+    : [];
+
   return (
     <>
       <section className="card">
@@ -86,7 +229,13 @@ export default function Lesson({ topic, learnerId }) {
               {lessonLang !== 'en' ? ' (it is in English)' : ''}
             </p>
           )}
-          <p className="lesson-text">{lesson.text}</p>
+          {parsed.hasHeadings
+            ? parsed.sections.map((s, i) => renderSection(s, i))
+            : plainBlocks.map((b, i) => (
+                <p key={i} className="lesson-para" style={{ whiteSpace: 'pre-line' }}>
+                  {b}
+                </p>
+              ))}
         </section>
       )}
     </>

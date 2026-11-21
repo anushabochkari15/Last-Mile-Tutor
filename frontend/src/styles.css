@@ -251,3 +251,185 @@ button:disabled,
 p {
   margin: 0 0 8px;
 }
+
+
+.lesson-heading {
+  margin: 20px 0 8px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.lesson-heading:first-of-type {
+  margin-top: 0;
+}
+
+.lesson-para {
+  margin: 0 0 10px;
+  line-height: 1.6;
+}
+
+.lesson-list {
+  margin: 0 0 10px;
+  padding-left: 20px;
+  line-height: 1.6;
+  list-style: disc;
+}
+
+.lesson-list li {
+  margin: 4px 0;
+}
+
+.example-box {
+  background: #f1f3f5;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 10px 0;
+}
+
+.example-title {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.lesson-steps {
+  margin: 0 0 8px;
+  padding-left: 22px;
+  line-height: 1.6;
+}
+
+.example-answer {
+  margin: 6px 0 0;
+  font-weight: 500;
+}
+
+
+/* ---- 360px phone fit ---- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-size: 16px;
+  overflow-x: hidden;
+}
+
+img,
+svg,
+video {
+  max-width: 100%;
+}
+
+.page,
+.card {
+  max-width: 100%;
+}
+
+h1,
+h2,
+h3,
+p,
+label,
+li,
+.option,
+.lesson-text,
+.lesson-para,
+.lesson-heading,
+.example-title,
+.feedback-success,
+.feedback-error,
+.muted {
+  overflow-wrap: anywhere;
+}
+
+.stat {
+  min-width: 0;
+  max-width: 100%;
+}
+
+button,
+.btn-primary,
+.btn-secondary,
+.btn-topic {
+  min-height: 44px;
+  padding: 10px 16px;
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-secondary {
+  padding: 9px 15px;
+}
+
+.btn-topic {
+  padding: 10px 14px;
+}
+
+input[type='text'],
+input[type='email'],
+input[type='number'],
+select,
+textarea {
+  min-height: 44px;
+  font-size: 16px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 12px;
+}
+
+.option input[type='radio'] {
+  flex: 0 0 auto;
+}
+
+.stat-row {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 16px;
+  }
+
+  .card {
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+  }
+
+  h2 {
+    font-size: 1.15rem;
+  }
+
+  h3 {
+    font-size: 1rem;
+  }
+
+  .stat {
+    flex: 1 1 100%;
+  }
+
+  .topic-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stat-value,
+  .topic-score {
+    font-size: 1.25rem;
+  }
+}
+

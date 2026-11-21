@@ -1,8 +1,10 @@
 package com.example.maths.service;
 
+import com.example.maths.model.Answer;
 import com.example.maths.model.Learner;
 import com.example.maths.model.Mastery;
 import com.example.maths.model.Question;
+import com.example.maths.repository.AnswerRepository;
 import com.example.maths.repository.LearnerRepository;
 import com.example.maths.repository.MasteryRepository;
 import com.example.maths.repository.QuestionRepository;
@@ -20,7 +22,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class LearningService {
@@ -28,13 +33,16 @@ public class LearningService {
     private final LearnerRepository learnerRepository;
     private final QuestionRepository questionRepository;
     private final MasteryRepository masteryRepository;
+    private final AnswerRepository answerRepository;
 
     public LearningService(LearnerRepository learnerRepository,
                            QuestionRepository questionRepository,
-                           MasteryRepository masteryRepository) {
+                           MasteryRepository masteryRepository,
+                           AnswerRepository answerRepository) {
         this.learnerRepository = learnerRepository;
         this.questionRepository = questionRepository;
         this.masteryRepository = masteryRepository;
+        this.answerRepository = answerRepository;
     }
 
     private Learner requireLearner(Long id) {
@@ -53,6 +61,64 @@ public class LearningService {
                     .forEach(all::add);
         }
         return all;
+    }
+
+    public List<QuestionView> practiceQuestions(Long learnerId, String topic) {
+        requireLearner(learnerId);
+        List<Question> all = questionRepository.findByTopic(topic);
+        if (all.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No questions for topic " + topic);
+        }
+        Set<Long> answered = new HashSet<>(answerRepository.findAnsweredQuestionIds(learnerId, topic));
+
+        List<Question> unanswered = new ArrayList<>();
+        List<Question> done = new ArrayList<>();
+        for (Question q : all) {
+            if (answered.contains(q.getId())) {
+                done.add(q);
+            } else {
+                unanswered.add(q);
+            }
+        }
+        Collections.shuffle(unanswered);
+        Collections.shuffle(done);
+
+        List<QuestionView> result = new ArrayList<>();
+        unanswered.stream().map(QuestionView::from).forEach(result::add);
+        done.stream().map(QuestionView::from).forEach(result::add);
+        return result;
+    }
+
+    public List<QuestionView> nextPracticeSet(Long learnerId, String topic) {
+        requireLearner(learnerId);
+        List<Question> all = questionRepository.findByTopic(topic);
+        if (all.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No questions for topic " + topic);
+        }
+
+        Set<Long> cycle = new LinkedHashSet<>();
+        for (Answer a : answerRepository.findRecentForTopic(learnerId, topic)) {
+            cycle.add(a.getQuestion().getId());
+            if (cycle.size() == all.size()) {
+                break;
+            }
+        }
+        if (cycle.size() == all.size()) {
+            cycle = new LinkedHashSet<>();
+        }
+
+        List<Question> candidates = new ArrayList<>();
+        for (Question q : all) {
+            if (!cycle.contains(q.getId())) {
+                candidates.add(q);
+            }
+        }
+        Collections.shuffle(candidates);
+
+        return candidates.stream()
+                .limit(5)
+                .map(QuestionView::from)
+                .toList();
     }
 
     @Transactional
@@ -79,6 +145,8 @@ public class LearningService {
         }
         learner.setLastActiveDate(today);
         learnerRepository.save(learner);
+
+        answerRepository.save(new Answer(learner, question, isCorrect));
 
         return new AnswerResult(isCorrect, question.getExplanation(), question.getHint());
     }

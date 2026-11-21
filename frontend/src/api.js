@@ -33,3 +33,40 @@ export function errorText(err) {
   if (err instanceof TypeError) return 'Could not reach the server. Check that the backend is running.';
   return (err && err.message) || 'Something went wrong. Please try again.';
 }
+
+
+// Account used by the "Use demo learner" button on the setup screen.
+export const DEMO_LEARNER = { name: 'Demo learner', email: 'demo@example.com' };
+
+// Gives the demo learner a few answers in every topic so the dashboard has progress.
+// Each failing request is skipped so one error does not stop the rest.
+export async function seedDemoProgress(learnerId) {
+  let topics;
+  try {
+    topics = await getJson('/api/topics');
+  } catch {
+    return;
+  }
+  if (!Array.isArray(topics)) return;
+
+  for (const topic of topics) {
+    let questions;
+    try {
+      questions = await getJson(`/api/questions?topic=${encodeURIComponent(topic)}`);
+    } catch {
+      continue;
+    }
+    const picked = Array.isArray(questions) ? questions.slice(0, 2) : [];
+    for (let i = 0; i < picked.length; i++) {
+      try {
+        await postJson(`/api/learners/${encodeURIComponent(learnerId)}/answers`, {
+          questionId: picked[i].id,
+          selectedIndex: i, // first question answered 0, second answered 1
+        });
+      } catch {
+        // Skip this answer and carry on.
+      }
+    }
+  }
+}
+

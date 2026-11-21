@@ -1,0 +1,19 @@
+What is it?
+A linear equation has one unknown, usually x, and is solved by doing the same operation to both sides. The goal is to get x alone on one side.
+Key rules
+- Move constants across with the opposite sign.
+- Divide both sides by the coefficient of x.
+- Check your answer by substituting it back in.
+Worked examples
+Example 1: Solve 3x - 5 = 10
+1. Add 5 to both sides: 3x = 15
+2. Divide both sides by 3: x = 5
+3. Check: 3(5) - 5 = 10
+Answer: x = 5
+Example 2: Solve 2x + 3 = 11
+1. Subtract 3 from both sides: 2x = 8
+2. Divide both sides by 2: x = 4
+3. Check: 2(4) + 3 = 11
+Answer: x = 4
+Common mistake
+Forgetting to change the sign when moving a term, or dividing only one side. Whatever you do to one side, do to the other.

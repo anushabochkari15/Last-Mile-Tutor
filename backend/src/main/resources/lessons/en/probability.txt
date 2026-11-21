@@ -1,0 +1,19 @@
+What is it?
+Probability measures how likely an event is. It equals favourable outcomes divided by total equally likely outcomes, and it always lies between 0 and 1.
+Key rules
+- 0 means impossible and 1 means certain.
+- P(not A) = 1 - P(A).
+- For independent events, multiply their probabilities.
+Worked examples
+Example 1: A fair die is rolled. Find P(even).
+1. Favourable outcomes are 2, 4 and 6, so there are 3
+2. Total outcomes are 1 to 6, so there are 6
+3. Divide: 3/6 = 1/2
+Answer: 1/2
+Example 2: Two fair coins are tossed. Find P(both heads).
+1. P(heads on the first coin) = 1/2
+2. P(heads on the second coin) = 1/2
+3. Multiply, since the events are independent: 1/2 x 1/2 = 1/4
+Answer: 1/4
+Common mistake
+Counting outcomes that are not equally likely, or forgetting to divide by the total number of outcomes. Always list every outcome before counting favourable ones.

@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { getJson, postJson, errorText } from '../api.js';
 
 // Loads a list of questions from `path` and runs the Quiz on them.
-export function QuizLoader({ path, learnerId, onBack }) {
+// With `practice`, the Quiz shows a "Next 5 questions" button that refetches `path`.
+export function QuizLoader({ path, learnerId, onBack, practice = false }) {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [round, setRound] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -24,14 +26,22 @@ export function QuizLoader({ path, learnerId, onBack }) {
     return () => {
       active = false;
     };
-  }, [path]);
+  }, [path, round]);
 
   if (loading) return <p className="muted">Loading questions…</p>;
   if (error) return <p className="feedback-error">{error}</p>;
-  return <Quiz questions={questions} learnerId={learnerId} onBack={onBack} />;
+  return (
+    <Quiz
+      questions={questions}
+      learnerId={learnerId}
+      onBack={onBack}
+      onNext={practice ? () => setRound((r) => r + 1) : undefined}
+      emptyText={round > 0 ? 'No more questions for this topic right now.' : undefined}
+    />
+  );
 }
 
-export default function Quiz({ questions, learnerId, onBack }) {
+export default function Quiz({ questions, learnerId, onBack, onNext, emptyText }) {
   // questionId -> { selected, submitting, result, error, hint, hintLoading, hintError }
   const [state, setState] = useState({});
   const alive = useRef(false);
@@ -79,7 +89,9 @@ export default function Quiz({ questions, learnerId, onBack }) {
     }
   }
 
-  if (questions.length === 0) return <p>No questions available right now.</p>;
+  if (questions.length === 0) {
+    return <p>{emptyText || 'No questions available right now.'}</p>;
+  }
 
   const answered = questions.filter((q) => state[q.id]?.result).length;
   const allDone = answered === questions.length;
@@ -154,6 +166,14 @@ export default function Quiz({ questions, learnerId, onBack }) {
           </div>
         );
       })}
+
+      {allDone && onNext && (
+        <div className="card">
+          <button className="btn-primary" onClick={onNext}>
+            Next 5 questions
+          </button>
+        </div>
+      )}
 
       {allDone && onBack && (
         <div className="card">

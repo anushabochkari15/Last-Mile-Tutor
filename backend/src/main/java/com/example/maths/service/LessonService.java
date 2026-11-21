@@ -4,12 +4,17 @@ import com.example.maths.model.Question;
 import com.example.maths.repository.QuestionRepository;
 import com.example.maths.web.dto.LessonView;
 import com.example.maths.web.dto.TopicProgress;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -70,10 +75,31 @@ public class LessonService {
             return new LessonView(topic, lang, simple, "llm", generated.get());
         }
 
+        Optional<String> storedLesson = loadStoredLesson(topic, lang);
+        if (storedLesson.isPresent()) {
+            return new LessonView(topic, lang, simple, "stored", storedLesson.get());
+        }
+
         String stored = questions.stream()
                 .map(Question::getExplanation)
                 .filter(e -> e != null && !e.isBlank())
                 .collect(Collectors.joining("\n\n"));
         return new LessonView(topic, lang, simple, "stored", stored);
+    }
+
+    private Optional<String> loadStoredLesson(String topic, String lang) {
+        String name = topic.toLowerCase(Locale.ROOT);
+        if (!name.matches("[a-z]+")) {
+            return Optional.empty();
+        }
+        ClassPathResource resource = new ClassPathResource("lessons/" + lang + "/" + name + ".txt");
+        if (!resource.exists()) {
+            return Optional.empty();
+        }
+        try (InputStream in = resource.getInputStream()) {
+            return Optional.of(new String(in.readAllBytes(), StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            return Optional.empty();
+        }
     }
 }
