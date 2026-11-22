@@ -10,8 +10,10 @@ import com.example.maths.web.dto.LearnerRequest;
 import com.example.maths.web.dto.MasteryView;
 import com.example.maths.web.dto.ProgressView;
 import com.example.maths.web.dto.QuestionView;
+import com.example.maths.web.dto.RecommendationView;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -58,6 +60,17 @@ public class LearnerController {
         return learnerRepository.findAll();
     }
 
+    @GetMapping("/by-email")
+    public Learner byEmail(@RequestParam String email) {
+        String normalised = email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
+        if (normalised.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Please enter an email address");
+        }
+        return learnerRepository.findByEmail(normalised)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No learner found with that email"));
+    }
+
+
     @GetMapping("/{id}/mastery")
     public List<MasteryView> mastery(@PathVariable Long id) {
         return masteryRepository.findByLearnerId(id).stream()
@@ -73,6 +86,11 @@ public class LearnerController {
     @GetMapping("/{id}/progress")
     public ProgressView progress(@PathVariable Long id) {
         return learningService.progress(id);
+    }
+
+    @GetMapping("/{id}/recommendations")
+    public List<RecommendationView> recommendations(@PathVariable Long id) {
+        return learningService.recommendations(id);
     }
 
     @GetMapping("/{id}/practice")

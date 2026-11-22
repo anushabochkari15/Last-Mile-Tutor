@@ -1,4 +1,6 @@
-export const API = 'http://localhost:8080';
+// Backend base URL. Set VITE_API_URL in frontend/.env (see .env.example) to override.
+// Falls back to the local backend when the variable is not set.
+export const API = (import.meta.env.VITE_API_URL || 'http://localhost:8080').replace(/\/+$/, '');
 
 export class ApiError extends Error {
   constructor(status, message) {
@@ -7,10 +9,17 @@ export class ApiError extends Error {
   }
 }
 
+// Friendly text for a non-ok HTTP status; other statuses keep the generic message.
+function httpErrorMessage(status) {
+  if (status === 400) return 'Please check the details you entered and try again.';
+  if (status === 404) return 'That item could not be found.';
+  return `Something went wrong (HTTP ${status}). Please try again.`;
+}
+
 export async function getJson(path) {
   const res = await fetch(`${API}${path}`);
   if (!res.ok) {
-    throw new ApiError(res.status, `Something went wrong (HTTP ${res.status}). Please try again.`);
+    throw new ApiError(res.status, httpErrorMessage(res.status));
   }
   return res.json();
 }
@@ -22,7 +31,7 @@ export async function postJson(path, body) {
     body: JSON.stringify(body),
   });
   if (!res.ok) {
-    throw new ApiError(res.status, `Something went wrong (HTTP ${res.status}). Please try again.`);
+    throw new ApiError(res.status, httpErrorMessage(res.status));
   }
   return res.json();
 }

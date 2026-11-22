@@ -59,7 +59,7 @@ public class LessonService {
             Optional<TopicProgress> entry = learningService.progress(learnerId).topics().stream()
                     .filter(t -> t.topic().equals(topic))
                     .findFirst();
-            if (entry.isPresent() && entry.get().attempts() > 0 && entry.get().scorePercent() < 50) {
+            if (entry.isPresent() && entry.get().attempts() > 0 && entry.get().scorePercent() < LearningService.WEAK_SCORE_THRESHOLD) {
                 simple = true;
             }
         }
@@ -84,7 +84,7 @@ public class LessonService {
                 .map(Question::getExplanation)
                 .filter(e -> e != null && !e.isBlank())
                 .collect(Collectors.joining("\n\n"));
-        return new LessonView(topic, lang, simple, "stored", stored);
+        return new LessonView(topic, "en", simple, "stored", stored);
     }
 
     private Optional<String> loadStoredLesson(String topic, String lang) {

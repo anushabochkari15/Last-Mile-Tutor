@@ -5,6 +5,10 @@ export default function Dashboard({ learnerId, onStartDiagnostic, onLearn, onPra
   const [progress, setProgress] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  // Recommendations have their own state so a failure here does not affect the progress view.
+  const [recs, setRecs] = useState([]);
+  const [recsLoading, setRecsLoading] = useState(true);
+  const [recsError, setRecsError] = useState('');
 
   // Runs on mount, so returning to the dashboard always refetches progress.
   useEffect(() => {
@@ -20,6 +24,25 @@ export default function Dashboard({ learnerId, onStartDiagnostic, onLearn, onPra
       })
       .finally(() => {
         if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [learnerId]);
+
+  useEffect(() => {
+    let active = true;
+    setRecsLoading(true);
+    setRecsError('');
+    getJson(`/api/learners/${encodeURIComponent(learnerId)}/recommendations`)
+      .then((data) => {
+        if (active) setRecs(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        if (active) setRecsError(errorText(err));
+      })
+      .finally(() => {
+        if (active) setRecsLoading(false);
       });
     return () => {
       active = false;
@@ -66,6 +89,32 @@ export default function Dashboard({ learnerId, onStartDiagnostic, onLearn, onPra
         <button className="btn-primary" onClick={onStartDiagnostic}>
           Start diagnostic quiz
         </button>
+      </section>
+
+      <section className="card">
+        <h2>Recommended next steps</h2>
+        {recsLoading && <p className="muted">Loading recommendations…</p>}
+        {!recsLoading && recsError && (
+          <p className="muted">Recommendations are unavailable right now.</p>
+        )}
+        {!recsLoading && !recsError && recs.length === 0 && (
+          <p className="muted">No weak topics right now — keep going!</p>
+        )}
+        {!recsLoading &&
+          !recsError &&
+          recs.map((r) => (
+            <div key={r.topic}>
+              <p>
+                <strong>{r.topic}</strong> · Score: {r.scorePercent}%
+              </p>
+              <button className="btn-primary" onClick={() => onLearn(r.topic)}>
+                Learn
+              </button>
+              <button className="btn-secondary" onClick={() => onPractise(r.topic)}>
+                Practise
+              </button>
+            </div>
+          ))}
       </section>
 
       <h2>Topics</h2>

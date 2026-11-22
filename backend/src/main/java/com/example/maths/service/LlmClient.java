@@ -28,6 +28,10 @@ public class LlmClient {
     public LlmClient(LlmProperties props, ObjectMapper objectMapper) {
         this.props = props;
         this.objectMapper = objectMapper;
+        String key = props.getApiKey();
+        if (key == null || key.isBlank()) {
+            log.warn("LLM_API_KEY is not set; AI hints and lessons will use built-in content.");
+        }
     }
 
     public Optional<String> complete(String systemPrompt, String userPrompt) {

@@ -12,12 +12,15 @@ import com.example.maths.web.dto.AnswerRequest;
 import com.example.maths.web.dto.AnswerResult;
 import com.example.maths.web.dto.ProgressView;
 import com.example.maths.web.dto.QuestionView;
+import com.example.maths.web.dto.RecommendationView;
 import com.example.maths.web.dto.TopicProgress;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,6 +32,9 @@ import java.util.Set;
 
 @Service
 public class LearningService {
+
+    /** Topics scoring strictly below this percentage are treated as weak. */
+    public static final int WEAK_SCORE_THRESHOLD = 50;
 
     private final LearnerRepository learnerRepository;
     private final QuestionRepository questionRepository;
@@ -127,6 +133,13 @@ public class LearningService {
         Question question = questionRepository.findById(req.questionId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
+        int optionCount = question.getOptions().size();
+        if (req.selectedIndex() < 0 || req.selectedIndex() >= optionCount) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "selectedIndex must be between 0 and " + (optionCount - 1));
+        }
+
+
         boolean isCorrect = req.selectedIndex() == question.getCorrectIndex();
 
         Mastery mastery = masteryRepository.findByLearnerIdAndTopic(learnerId, question.getTopic())
@@ -177,6 +190,27 @@ public class LearningService {
         return new ProgressView(topics, totalAttempts, totalCorrect,
                 scorePercent(totalAttempts, totalCorrect),
                 learner.getCurrentStreak(), weakestTopic);
+    }
+
+    @Transactional(readOnly = true)
+    public List<RecommendationView> recommendations(Long learnerId) {
+        List<TopicProgress> weak = progress(learnerId).topics().stream()
+                .filter(t -> t.attempts() > 0 && t.scorePercent() < WEAK_SCORE_THRESHOLD)
+                .sorted(Comparator.comparingInt(TopicProgress::scorePercent)
+                        .thenComparing(TopicProgress::topic))
+                .toList();
+
+        List<RecommendationView> result = new ArrayList<>();
+        for (TopicProgress t : weak) {
+            String encodedTopic = URLEncoder.encode(t.topic(), StandardCharsets.UTF_8);
+            result.add(new RecommendationView(
+                    t.topic(),
+                    t.scorePercent(),
+                    t.attempts(),
+                    "/api/lesson?topic=" + encodedTopic,
+                    "/api/quiz/practice?learnerId=" + learnerId + "&topic=" + encodedTopic));
+        }
+        return result;
     }
 
     private static int scorePercent(int attempts, int correct) {

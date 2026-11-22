@@ -12,6 +12,41 @@ const HEADINGS = {
   te: ['ఇది ఏమిటి?', 'ముఖ్య నియమాలు', 'ఉదాహరణలు', 'సాధారణ తప్పు'],
   hi: ['यह क्या है?', 'मुख्य नियम', 'उदाहरण', 'आम गलती'],
 };
+const UI = {
+  en: {
+    title: 'Learn',
+    language: 'Language:',
+    getLesson: 'Get lesson',
+    loadingButton: 'Loading…',
+    loadingLesson: 'Loading lesson…',
+    simplified: 'Simpler explanation based on your score',
+    builtIn: 'Showing the built-in explanation',
+    inEnglish: ' (it is in English)',
+    aiUnavailable: 'AI lesson unavailable right now. Showing the built-in explanation',
+  },
+  te: {
+    title: 'నేర్చుకోండి',
+    language: 'భాష:',
+    getLesson: 'పాఠం పొందండి',
+    loadingButton: 'లోడ్ అవుతోంది…',
+    loadingLesson: 'పాఠం లోడ్ అవుతోంది…',
+    simplified: 'మీ స్కోరు ఆధారంగా సరళమైన వివరణ',
+    builtIn: 'అంతర్నిర్మిత వివరణ చూపిస్తోంది',
+    inEnglish: ' (ఇది ఇంగ్లీష్‌లో ఉంది)',
+    aiUnavailable: 'AI పాఠం ప్రస్తుతం అందుబాటులో లేదు. అంతర్నిర్మిత వివరణ చూపిస్తోంది',
+  },
+  hi: {
+    title: 'सीखें',
+    language: 'भाषा:',
+    getLesson: 'पाठ लें',
+    loadingButton: 'लोड हो रहा है…',
+    loadingLesson: 'पाठ लोड हो रहा है…',
+    simplified: 'आपके स्कोर के आधार पर सरल व्याख्या',
+    builtIn: 'अंतर्निहित व्याख्या दिखाई जा रही है',
+    inEnglish: ' (यह अंग्रेज़ी में है)',
+    aiUnavailable: 'AI पाठ अभी उपलब्ध नहीं है। अंतर्निहित व्याख्या दिखाई जा रही है',
+  },
+};
 const ALL_HEADINGS = [...HEADINGS.en, ...HEADINGS.te, ...HEADINGS.hi];
 const WORKED_HEADINGS = [HEADINGS.en[2], HEADINGS.te[2], HEADINGS.hi[2]];
 const EXAMPLE_RE = /^(Example|ఉదాహరణ|उदाहरण) \d+:/;
@@ -185,6 +220,7 @@ export default function Lesson({ topic, learnerId }) {
   }
 
   const lessonLang = lesson ? lesson.lang || lang : lang;
+  const ui = UI[lang] || UI.en;
 
   const parsed = lesson ? parseLesson(lesson.text) : null;
   const plainBlocks = lesson
@@ -197,10 +233,10 @@ export default function Lesson({ topic, learnerId }) {
   return (
     <>
       <section className="card">
-        <h2>Learn: {topic}</h2>
+        <h2>{ui.title}: {topic}</h2>
         <div className="field">
           <label>
-            Language:{' '}
+            {ui.language}{' '}
             <select value={lang} onChange={changeLang}>
               {LANGS.map((l) => (
                 <option key={l.code} value={l.code}>
@@ -211,22 +247,22 @@ export default function Lesson({ topic, learnerId }) {
           </label>
         </div>
         <button className="btn-primary" onClick={() => load(lang)} disabled={loading}>
-          {loading ? 'Loading…' : 'Get lesson'}
+          {loading ? ui.loadingButton : ui.getLesson}
         </button>
       </section>
 
-      {loading && <p className="muted">Loading lesson…</p>}
+      {loading && <p className="muted">{ui.loadingLesson}</p>}
       {error && <p className="feedback-error">{error}</p>}
 
       {lesson && !loading && (
         <section className="card">
           {lesson.simplified && (
-            <p className="muted">Simpler explanation based on your score</p>
+            <p className="muted">{ui.simplified}</p>
           )}
           {lesson.source === 'stored' && (
             <p className="muted">
-              Showing the built-in explanation
-              {lessonLang !== 'en' ? ' (it is in English)' : ''}
+              {ui.aiUnavailable}
+              {lesson.lang !== lang ? ui.inEnglish : ''}
             </p>
           )}
           {parsed.hasHeadings

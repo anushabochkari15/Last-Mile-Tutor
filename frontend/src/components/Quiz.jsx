@@ -82,6 +82,7 @@ export default function Quiz({ questions, learnerId, onBack, onNext, emptyText }
         patch(q.id, {
           hintLoading: false,
           hint: data.text || 'No hint is available for this question.',
+          hintSource: data.source,
         });
       }
     } catch (err) {
@@ -141,9 +142,14 @@ export default function Quiz({ questions, learnerId, onBack, onNext, emptyText }
             </div>
 
             {!locked && cur.hint && (
-              <div className="hint-box">
-                <strong>Hint:</strong> {cur.hint}
-              </div>
+              <>
+                <div className="hint-box">
+                  <strong>Hint:</strong> {cur.hint}
+                </div>
+                {cur.hintSource === 'stored' && (
+                  <p className="muted">AI hint unavailable right now. Showing the built-in hint.</p>
+                )}
+              </>
             )}
             {cur.hintError && <p className="feedback-error">{cur.hintError}</p>}
             {cur.error && <p className="feedback-error">{cur.error}</p>}

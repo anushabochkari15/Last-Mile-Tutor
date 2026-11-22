@@ -27,6 +27,8 @@ export default function App() {
   const [setupError, setSetupError] = useState('');
   const [saving, setSaving] = useState(false);
   const [demoLoading, setDemoLoading] = useState(false);
+  const [signInEmail, setSignInEmail] = useState('');
+  const [signingIn, setSigningIn] = useState(false);
 
   async function handleDemoLearner() {
     setSetupError('');
@@ -93,6 +95,30 @@ export default function App() {
     }
   }
 
+  async function signIn(e) {
+    e.preventDefault();
+    setSetupError('');
+    setSigningIn(true);
+    try {
+      const data = await getJson(
+        `/api/learners/by-email?email=${encodeURIComponent(signInEmail.trim())}`
+      );
+      if (!data || data.id == null) {
+        throw new Error('The server returned an unexpected learner.');
+      }
+      localStorage.setItem(LEARNER_KEY, JSON.stringify(data));
+      setLearner(data);
+      setName('');
+      setEmail('');
+      setSignInEmail('');
+      setView('dashboard');
+    } catch (err) {
+      setSetupError(errorText(err));
+    } finally {
+      setSigningIn(false);
+    }
+  }
+
   function changeLearner() {
     localStorage.removeItem(LEARNER_KEY);
     setLearner(null);
@@ -104,7 +130,7 @@ export default function App() {
   return (
     <div className="page">
       <header className="card header-card">
-        <h1>Maths Practice</h1>
+        <h1>Last-Mile Tutor</h1>
         {learner && (
           <div className="header-actions">
             <button className="btn-primary" onClick={() => setView('dashboard')}>
@@ -154,6 +180,24 @@ export default function App() {
               disabled={demoLoading}
             >
               {demoLoading ? 'Starting demo...' : 'Use demo learner'}
+            </button>
+          </form>
+          <h2>Already registered? Sign in</h2>
+          <form onSubmit={signIn}>
+            <div className="field">
+              <label>
+                Email to sign in:{' '}
+                <input
+                  type="email"
+                  value={signInEmail}
+                  onChange={(e) => setSignInEmail(e.target.value)}
+                  required
+                />
+              </label>
+            </div>
+            {setupError && <p className="feedback-error">{setupError}</p>}
+            <button type="submit" className="btn-primary" disabled={signingIn}>
+              {signingIn ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
         </section>
