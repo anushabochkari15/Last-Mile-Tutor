@@ -1,20 +1,25 @@
 package com.example.maths.seed;
 
+import com.example.maths.model.Learner;
 import com.example.maths.model.Question;
+import com.example.maths.repository.LearnerRepository;
 import com.example.maths.repository.QuestionRepository;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Component
 public class DataSeeder implements ApplicationRunner {
 
     private final QuestionRepository questionRepository;
+    private final LearnerRepository learnerRepository;
 
-    public DataSeeder(QuestionRepository questionRepository) {
+    public DataSeeder(QuestionRepository questionRepository, LearnerRepository learnerRepository) {
         this.questionRepository = questionRepository;
+        this.learnerRepository = learnerRepository;
     }
 
     @Override
@@ -25,6 +30,16 @@ public class DataSeeder implements ApplicationRunner {
             if (!exists) {
                 questionRepository.save(question);
             }
+        }
+        seedDemoLearner();
+    }
+
+    private void seedDemoLearner() {
+        if (learnerRepository.findByEmail("demo@example.com").isEmpty()) {
+            Learner demo = new Learner("Demo learner", "demo@example.com");
+            demo.setCurrentStreak(5);
+            demo.setLastActiveDate(LocalDate.now().minusDays(1));
+            learnerRepository.save(demo);
         }
     }
 

@@ -54,6 +54,7 @@ export default function Dashboard({ learnerId, onStartDiagnostic, onLearn, onPra
   if (!progress) return null;
 
   const topics = progress.topics || [];
+  const streak = progress.currentStreak ?? 0;
 
   return (
     <>
@@ -61,7 +62,7 @@ export default function Dashboard({ learnerId, onStartDiagnostic, onLearn, onPra
         <h2>Your progress</h2>
         <div className="stat-row">
           <div className="stat">
-            <span className="stat-value">{progress.currentStreak ?? 0} days</span>
+            <span className="stat-value">{streak} {streak === 1 ? 'day' : 'days'}</span>
             <span className="muted">Streak</span>
           </div>
           <div className="stat">

@@ -54,6 +54,10 @@ public class LessonService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
 
+        if (learnerId != null) {
+            learningService.recordActivity(learnerId);
+        }
+
         boolean simple = false;
         if (learnerId != null) {
             Optional<TopicProgress> entry = learningService.progress(learnerId).topics().stream()

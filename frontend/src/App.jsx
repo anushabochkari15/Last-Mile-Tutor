@@ -29,6 +29,7 @@ export default function App() {
   const [demoLoading, setDemoLoading] = useState(false);
   const [signInEmail, setSignInEmail] = useState('');
   const [signingIn, setSigningIn] = useState(false);
+  const [welcomeBack, setWelcomeBack] = useState(null);
 
   async function handleDemoLearner() {
     setSetupError('');
@@ -83,16 +84,33 @@ export default function App() {
       if (!data || data.id == null) {
         throw new Error('The server returned an unexpected learner.');
       }
-      localStorage.setItem(LEARNER_KEY, JSON.stringify(data));
-      setLearner(data);
-      setName('');
-      setEmail('');
-      setView('dashboard');
+      if (data.existing === true) {
+        // Email already registered: hold the learner until the user confirms.
+        setWelcomeBack(data);
+        setName('');
+        setEmail('');
+      } else {
+        localStorage.setItem(LEARNER_KEY, JSON.stringify(data));
+        setLearner(data);
+        setName('');
+        setEmail('');
+        setView('dashboard');
+      }
     } catch (err) {
       setSetupError(errorText(err));
     } finally {
       setSaving(false);
     }
+  }
+
+  function continueWelcomeBack() {
+    const learner = welcomeBack;
+    if (!learner) return;
+    const saved = { id: learner.id, name: learner.name, email: learner.email };
+    localStorage.setItem(LEARNER_KEY, JSON.stringify(saved));
+    setLearner(saved);
+    setWelcomeBack(null);
+    setView('dashboard');
   }
 
   async function signIn(e) {
@@ -146,6 +164,18 @@ export default function App() {
       {view === 'setup' && (
         <section className="card">
           <h2>Create your learner</h2>
+          {welcomeBack && (
+            <div className="card" role="dialog" aria-labelledby="welcome-back-title">
+              <h2 id="welcome-back-title">Welcome back, {welcomeBack.name}!</h2>
+              <p>This email is already registered.</p>
+              <button className="btn-primary" onClick={continueWelcomeBack}>
+                Continue
+              </button>
+              <button className="btn-secondary" onClick={() => setWelcomeBack(null)}>
+                Use a different email
+              </button>
+            </div>
+          )}
           <form onSubmit={createLearner}>
             <div className="field">
               <label>

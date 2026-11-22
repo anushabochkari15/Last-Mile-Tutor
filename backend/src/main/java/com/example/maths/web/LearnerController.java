@@ -6,6 +6,7 @@ import com.example.maths.repository.MasteryRepository;
 import com.example.maths.service.LearningService;
 import com.example.maths.web.dto.AnswerRequest;
 import com.example.maths.web.dto.AnswerResult;
+import com.example.maths.web.dto.LearnerRegistrationView;
 import com.example.maths.web.dto.LearnerRequest;
 import com.example.maths.web.dto.MasteryView;
 import com.example.maths.web.dto.ProgressView;
@@ -44,15 +45,17 @@ public class LearnerController {
     }
 
     @PostMapping
-    public ResponseEntity<Learner> create(@Valid @RequestBody LearnerRequest req) {
+    public ResponseEntity<LearnerRegistrationView> create(@Valid @RequestBody LearnerRequest req) {
         String email = req.email().trim().toLowerCase(Locale.ROOT);
         String name = req.name().trim();
         Optional<Learner> existing = learnerRepository.findByEmail(email);
         if (existing.isPresent()) {
-            return ResponseEntity.ok(existing.get());
+            Learner e = existing.get();
+            return ResponseEntity.ok(new LearnerRegistrationView(e.getId(), e.getName(), e.getEmail(), true));
         }
         Learner saved = learnerRepository.save(new Learner(name, email));
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new LearnerRegistrationView(saved.getId(), saved.getName(), saved.getEmail(), false));
     }
 
     @GetMapping

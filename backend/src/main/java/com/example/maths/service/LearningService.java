@@ -147,21 +147,20 @@ public class LearningService {
         mastery.recordAnswer(isCorrect);
         masteryRepository.save(mastery);
 
-        LocalDate today = LocalDate.now();
-        LocalDate lastActive = learner.getLastActiveDate();
-        if (today.equals(lastActive)) {
-            // already active today: streak unchanged
-        } else if (today.minusDays(1).equals(lastActive)) {
-            learner.setCurrentStreak(learner.getCurrentStreak() + 1);
-        } else {
-            learner.setCurrentStreak(1);
-        }
-        learner.setLastActiveDate(today);
+        applyActivity(learner, LocalDate.now());
         learnerRepository.save(learner);
 
         answerRepository.save(new Answer(learner, question, isCorrect));
 
         return new AnswerResult(isCorrect, question.getExplanation(), question.getHint());
+    }
+
+    /** Records learner activity (e.g. a lesson open) and updates the streak. */
+    @Transactional
+    public void recordActivity(Long learnerId) {
+        Learner learner = requireLearner(learnerId);
+        applyActivity(learner, LocalDate.now());
+        learnerRepository.save(learner);
     }
 
     @Transactional(readOnly = true)
@@ -215,5 +214,23 @@ public class LearningService {
 
     private static int scorePercent(int attempts, int correct) {
         return attempts == 0 ? 0 : (int) Math.round(correct * 100.0 / attempts);
+    }
+
+    /**
+     * Shared streak rule: first activity -> 1; already active today -> unchanged;
+     * active yesterday -> +1; otherwise (gap of more than one day) -> 1.
+     */
+    private static void applyActivity(Learner learner, LocalDate today) {
+        LocalDate lastActive = learner.getLastActiveDate();
+        if (lastActive == null) {
+            learner.setCurrentStreak(1);
+        } else if (lastActive.equals(today)) {
+            // already active today: streak unchanged
+        } else if (lastActive.equals(today.minusDays(1))) {
+            learner.setCurrentStreak(learner.getCurrentStreak() + 1);
+        } else {
+            learner.setCurrentStreak(1);
+        }
+        learner.setLastActiveDate(today);
     }
 }
