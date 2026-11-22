@@ -1,52 +1,45 @@
-# Maths Practice
+# Last-Mile Tutor
 
-Spring Boot 3 (Java 17) + JPA + H2 backend, React (Vite) frontend. Learners take diagnostic and practice quizzes across 5 maths topics (Algebra, Fractions, Geometry, Percentages, Probability), track mastery and streaks, and get lessons and hints.
+> Find your weak spot in maths, and learn it in your own language, with no teacher needed.
+## The problem
+Many students have no teacher or tutor within reach. When they fall behind in maths, nobody notices where they are stuck, and most learning apps need money, a fast connection or good English.
 
-## Prerequisites
+## Our solution
+Last-Mile Tutor finds what a learner is missing, teaches it step by step in English, Telugu or Hindi, and gives hints that guide without revealing the answer.
 
-- Java 17
-- Maven 3.9+
-- Node.js 18+ and npm
+## Features
+- **Quick sign-in:** name and email only; returning learners get a "Welcome back" message with their saved progress
+- **Diagnostic quiz** across 5 topics: Algebra, Fractions, Geometry, Percentages, Probability
+- **Weak-topic detection** and recommended next steps on the dashboard
+- **Lessons in English, Telugu and Hindi**
+- **Practice with hints** and a step-by-step explanation after each answer
+- **Progress tracking:** score per topic, overall score and daily streak
+- **Demo learner** button for a quick tour
+- **Light and simple:** no heavy libraries or images, so it suits basic phones and slow connections
 
-## Run the backend
+## Tech stack
+Spring Boot 3 (Java 17), Spring Data JPA, H2 database, React (Vite). Optional LLM for lessons and hints, with built-in text as a fallback.
 
-```bash
+## Run locally
+Prerequisites: Java 17, Maven 3.9+, Node.js 18+
+
+**Backend**
+```
 cd backend
 mvn spring-boot:run
 ```
+Runs on http://localhost:8080. The database is seeded on first start.
 
-The backend runs on http://localhost:8080. The database is seeded with 4 questions per topic on first start. The H2 file lives in `backend/data/` and is created automatically.
-
-## Optional: LLM lessons and hints
-
-Set the environment variable `LLM_API_KEY` before starting the backend. In PowerShell:
-
-```powershell
-$env:LLM_API_KEY = "your-key"
+**Frontend**
 ```
-
-Without it, lessons and hints fall back to the built-in text.
-
-## Run the frontend
-
-```bash
 cd frontend
 npm install
 npm run dev
 ```
+Opens on http://localhost:5173.
 
-Opens on http://localhost:5173 (the backend allows this origin via CORS).
+**Optional AI lessons:** set `LLM_API_KEY` before starting the backend (PowerShell: `$env:LLM_API_KEY = "your-key"`). Without it, built-in lessons and hints are used.
 
-## H2 console
+## Future work
+Teacher or parent view, more subjects and questions, revision reminders, and offline mode.
 
-- URL: http://localhost:8080/h2-console
-- JDBC URL: `jdbc:h2:file:./data/mathsdb`
-- User: `sa`
-- Password: (empty)
-
-## Build
-
-```bash
-mvn -f backend/pom.xml package
-npm run build   # run in frontend/
-```
